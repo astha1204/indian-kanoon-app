@@ -20,17 +20,27 @@ app.get('/health', (req, res) => {
 // Visit http://localhost:3001/search?query=murder
 // req.query.query gives us the "murder" part
 app.get('/search', async (req, res) => {
-
   const { query } = req.query;
 
-  // If no query was provided, return an error
   if (!query) {
     return res.status(400).json({ error: 'query parameter is required' });
   }
 
   try {
+    // 🔥 NEW: Check if query is a numeric ID
+    if (/^\d+$/.test(query)) {
+      const url = `https://indiankanoon.org/doc/${query}/`;
+
+      const caseData = await fetchCase(url);
+
+      // return as array to keep response format consistent
+      return res.json([caseData]);
+    }
+
+    // 🔁 Existing behavior
     const results = await searchCases(query);
-    res.json(results); // sends JSON array back to frontend
+    res.json(results);
+
   } catch (err) {
     console.error('Search error:', err.message);
     res.status(500).json({ error: 'Failed to fetch results' });
